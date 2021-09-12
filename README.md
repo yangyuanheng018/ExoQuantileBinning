@@ -5,13 +5,13 @@ The binning by quantile method is proposed to preprocess TESS light curves, wher
 
 ## List of python files for this project
 [data_preprocess](data_preprocess/)
-- [fold_bin_quantile.py](data_preprocess/fold_bin_quantile.py) downloading, detrending the light curves for the training-validation-test dataset.
-- [fold_bin_quantile_sectors.py](data_preprocess/fold_bin_quantile_sectors.py) downloading, detrending the light curves for the TOI dataset.
+- [fold_bin_quantile.py](data_preprocess/fold_bin_quantile.py) preprocessing the light curves for the training-validation-test dataset.
+- [fold_bin_quantile_sectors.py](data_preprocess/fold_bin_quantile_sectors.py) preprocessing the light curve of any sector and generating the model inputs representation .
 
 [models](models/)
 - [models.py](models/models.py) neural network architecture
 - [train_model.py](models/train_model.py) model training and referring 
-- [infer_sectors.py](models/infer_sectors.py) averaging the cross validation results for the test set and show some results.
+- [infer_sectors.py](models/infer_sectors.py) inference and prediction of any sector
 
 ## Preparing the data for the neural network
 Run ```python data_preprocess/fold_bin_quantile.py``` to get 'train.npz', 'val.npz' and 'test.npz' in the 'model_input/data_q' folder.
