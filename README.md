@@ -25,3 +25,4 @@ cd models/
 sh run_training.sh
 ```
 to train ten models for the exoplanet *vetting* task with data augmentation method inversion (*i*).
+https://zenodo.org/badge/doi/10.5281/zenodo.5517069.svg
