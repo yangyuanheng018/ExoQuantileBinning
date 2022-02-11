@@ -1,6 +1,20 @@
 import torch
 import torch.nn as nn
+import torch.utils.data as data_utils
+import torch.nn.functional as F
+import torch.optim as optim
 
+from sklearn.metrics import average_precision_score, roc_auc_score
+import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
+
+from sklearn.metrics import average_precision_score, roc_auc_score, precision_score, recall_score, f1_score, roc_curve, auc
+
+#for _ in range(10):
+#    print(random.uniform(1.2,0.8))
+#s = np.random.uniform(-1,0,1000)
+#print(s)
+#pz = input()
 
 
 
@@ -82,7 +96,7 @@ class Model(nn.Module):
             nn.MaxPool1d(7, stride=2, return_indices=False))
 
         self.linear = nn.Sequential(
-            nn.Linear(92*n, 64*n),
+            nn.Linear(92*n+6, 64*n),
             nn.ReLU(),
             #nn.Linear(32*n, 32*n),
             #nn.ReLU(),
@@ -90,10 +104,9 @@ class Model(nn.Module):
             #nn.ReLU(),
             #nn.Linear(32*n, 32*n),
             #nn.ReLU(),
-            nn.Linear(64*n, 1),
-            nn.Sigmoid())
+            nn.Linear(64*n, 3)) ## softmax function outside model, as required by the CE loss function
 
-        self.drop = nn.Dropout(p=0.5)
+        #self.drop = nn.Dropout(p=0.5)
 
         for m in self.modules():
             if isinstance(m, nn.Linear):
@@ -102,17 +115,19 @@ class Model(nn.Module):
             elif isinstance(m, nn.Conv1d):
                 nn.init.xavier_normal_(m.weight)
 
-    def forward(self, gv, lv, sv):
+    def forward(self, gv, lv, sv, sl):
         gv_out = self.conv_gv(gv)
         lv_out = self.conv_lv(lv)
         sv_out = self.conv_lv(sv)
         gv_out = gv_out.view(gv_out.shape[0], -1)
         lv_out = lv_out.view(lv_out.shape[0], -1)
         sv_out = sv_out.view(sv_out.shape[0], -1)
-        #print(gv_out.size(), lv_out.size(), psd.size())
-        out = torch.cat((gv_out, lv_out, sv_out), dim=1)
+        #print(gv_out.size(), lv_out.size(), sl.size())
+        out = torch.cat((gv_out, lv_out, sv_out, sl), dim=1)
         #out = self.drop(out)
         #print(out.size())
         out = self.linear(out)
 
         return out
+
+softmax = nn.Softmax(dim=1)

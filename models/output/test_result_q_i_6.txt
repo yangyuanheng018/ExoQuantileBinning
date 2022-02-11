@@ -1,5 +1,0 @@
-AUC 0.9626392326732675
-APS 0.7831747220039778
-threshold0.25recovered23.0/32precision 0.7419recall 0.7188
-threshold0.5recovered17.0/32precision 0.7727recall 0.5312
-threshold0.75recovered11.0/32precision 0.8462recall 0.3438

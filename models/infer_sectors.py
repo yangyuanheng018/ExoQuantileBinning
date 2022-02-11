@@ -20,7 +20,7 @@ from sklearn.metrics import average_precision_score, roc_auc_score, precision_sc
 import pandas as pd
 
 from models import *
-
+import matplotlib.pylab as plt
 
 parser = argparse.ArgumentParser()
 parser.add_argument('sector', help='sector', type=str)
@@ -28,43 +28,111 @@ args = parser.parse_args()
 
 torch.backends.cudnn.benchmark = True
 
-sector_files = np.load('../model_input/data_q/sector'+args.sector+'.npz')
-sector_lv = sector_files['local_view']
-sector_gv = sector_files['global_view']
-sector_sv = sector_files['secondary_view']
+data = np.load('../model_input/data_q/sector'+args.sector+'.npz')
 
-#print('sector local view max:',np.max(sector_lv))
-#print('sector local view min:',np.min(sector_lv))
-#print('sector local view max:',np.max(sector_gv))
-#print('sector local view min:',np.min(sector_gv))
+global_view = data['global_view']#[:,:3]
+local_view = data['local_view']#[:,:3]
+secondary_view = data['secondary_view']#[:,:3]
+scalar = data['scalar']
+tic = data['tic']
+tce = data['tce']
 
-sector = data_utils.TensorDataset(torch.from_numpy(sector_gv).float(), torch.from_numpy(sector_lv).float(), torch.from_numpy(sector_sv).float())
+scalar_mean_0 = 5.216795473250833
+scalar_std_0 = 8.256681757964786
+scalar_mean_1 = 4.5273240606418375
+scalar_std_1 = 4.55454166155911
+scalar_mean_2 = 5890.859165863254
+scalar_std_2 = 1538.115397965016
+scalar_mean_3 = 2.6935281168261334
+scalar_std_3 = 8.169359116674578
+scalar_mean_4 = 4.168138988323937
+scalar_std_4 = 0.7169815866486623
+scalar_mean_5 = 2.524581765093486
+scalar_std_5 = 9.133970445454041
+## these values will be used in the inferring process
+scalar[:,0] -= scalar_mean_0
+scalar[:,0] /= scalar_std_0
+scalar[:,1] -= scalar_mean_1
+scalar[:,1] /= scalar_std_1
+scalar[:,2] -= scalar_mean_2
+scalar[:,2] /= scalar_std_2
+scalar[:,3] -= scalar_mean_3
+scalar[:,3] /= scalar_std_3
+scalar[:,4] -= scalar_mean_4
+scalar[:,4] /= scalar_std_4
+scalar[:,5] -= scalar_mean_5
+scalar[:,5] /= scalar_std_5
+
+global_view = np.clip(global_view, a_min=-5, a_max=5)
+local_view = np.clip(local_view, a_min=-5, a_max=5)
+secondary_view = np.clip(secondary_view, a_min=-5, a_max=5)
+scalar = np.clip(scalar, a_min=-5, a_max=5)
+
+### standardize scalar parameters
+## mean and standard deviation calculated with the following commented lines
+##for idx in range(6):
+##    print('scalar_mean_'+str(idx),'=', np.mean(scalar[:,idx]))
+##    print('scalar_std_'+str(idx),'=', np.std(scalar[:,idx]))
+
+
+sector = data_utils.TensorDataset(torch.from_numpy(global_view).float(), torch.from_numpy(local_view).float(), \
+                                  torch.from_numpy(secondary_view).float(), torch.from_numpy(scalar).float())
 
 sectorloader = data_utils.DataLoader(sector, batch_size=64, shuffle=False)
 
 net = Model(ch_in=3, n=32).cuda() ## convolutional network
 
-averaged_results = np.zeros(len(sector_lv))
-
 for k in range(10):
-    net.load_state_dict(torch.load('./output/model_q_i_'+str(k)+'.pt'))
-    net.eval()
+    for t in ('a', 'b', 'c', 'd', 'e'):
+        net.load_state_dict(torch.load('./output/model_q_'+t+'_'+str(k)+'.pt'))
+        net.eval()
+        idx = 0
+        for (gv, lv, sv, sc) in sectorloader:
+            gv, lv, sv, sc = gv.cuda(), lv.cuda(), sv.cuda(), sc.cuda()
+            outputs = net(gv, lv, sv, sc)
+            if idx == 0:
+                prediction = softmax(outputs).data.cpu().numpy()
+            else:
+                prediction = np.concatenate((prediction, softmax(outputs).data.cpu().numpy()), axis=0)
+            idx += 1
+        if k==0 and t=='a':
+            averaged_prediction = prediction
+        else:
+            averaged_prediction += prediction
 
-    pred_sector = [] ## model prediction and ground truth for the test set
-    for (gv, lv, sv) in sectorloader:
-        gv, lv, sv = gv.cuda(), lv.cuda(), sv.cuda()
-        outputs = net(gv, lv, sv)
-        pred_sector.append(outputs.data.cpu().numpy())
-    
-    pred_sector = np.concatenate(pred_sector).flatten()
-    #print(pred_sector)
-    averaged_results += pred_sector
-    #print(averaged_results)
-    #pz = input()
+        #print(prediction[:5])
+        #plt.hist(prediction[:,1],bins=50)
+        #plt.show()
+        #plt.close()
+        #ps = input()
 
-averaged_results = averaged_results/10.0
+averaged_prediction = averaged_prediction/50.0
 
-csv_files = ['tess2018349182739-s0006-s0006_dvr-tcestats.csv',  
+#print(averaged_prediction[:5])
+
+df = pd.DataFrame({'ticid': tic,
+                   'tceid': tce,
+                   'EB_probability': averaged_prediction[:,1],
+                   'PC_probability': averaged_prediction[:,2]})
+
+#sector = pd.read_csv('../tess_lc_download_sh/tess_tce_csv/'+csv_files[int(args.sector)], header=6)
+
+#sector['EB_probability'] = averaged_prediction[:,1]
+#sector['PC_probability'] = averaged_prediction[:,2]
+
+df.to_csv('../predictions/tce_eb_pc_probability_sector_'+args.sector+'.csv')
+
+print('inferring sector ',args.sector,' complete.')
+
+#sector.to_csv('../predictions/tce_eb_pc_probability_sector_'+args.sector+'.csv', index_label='index', columns=['ticid', 'tceid', 'EB_probability', 'PC_probability'])
+
+'''
+csv_files = ['tess2018206190142-s0001-s0001_dvr-tcestats.csv',
+             'tess2018235142541-s0002-s0002_dvr-tcestats.csv',
+             'tess2018263124740-s0003-s0003_dvr-tcestats.csv',
+             'tess2018292093539-s0004-s0004_dvr-tcestats.csv',
+             'tess2018319112538-s0005-s0005_dvr-tcestats.csv',
+             'tess2018349182739-s0006-s0006_dvr-tcestats.csv',  
              'tess2019008025936-s0007-s0007_dvr-tcestats.csv',  
              'tess2019033200935-s0008-s0008_dvr-tcestats.csv',  
              'tess2019059170935-s0009-s0009_dvr-tcestats.csv',  
@@ -97,11 +165,4 @@ csv_files = ['tess2018349182739-s0006-s0006_dvr-tcestats.csv',
              'tess2021066093107-s0036-s0036_dvr-tcestats.csv',
              'tess2021092173506-s0037-s0037_dvr-tcestats.csv',
              'tess2021119082105-s0038-s0038_dvr-tcestats.csv',
-             'tess2021147062104-s0039-s0039_dvr-tcestats.csv']
-
-sector = pd.read_csv('../tess_lc_download_sh/tess_tce_csv/'+csv_files[int(args.sector)-6], header=6)
-
-sector['probability'] = averaged_results
-
-
-sector.to_csv('../tce_probability/tce_exopplanet_probability_sector'+args.sector+'.csv', index_label='index', columns=['ticid', 'tceid', 'probability'])
+             'tess2021147062104-s0039-s0039_dvr-tcestats.csv']''' 

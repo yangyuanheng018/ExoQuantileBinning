@@ -1,0 +1,31 @@
+EB_AUC 0.974025974025974
+EB_APS 0.875868769002186
+PC_AUC 0.9173111626707915
+PC_APS 0.6815937336478779
+EB results: threshold: 0.25
+recovered42.0/49
+precision: 0.5185
+recall: 0.8571
+
+EB results: threshold: 0.5
+recovered40.0/49
+precision: 0.8333
+recall: 0.8163
+
+EB results: threshold: 0.75
+recovered35.0/49
+precision: 0.9211
+recall: 0.7143
+
+PC results: threshold0.25
+recovered2.0/49
+precision 0.0625
+recall 0.0408
+PC results: threshold0.5
+recovered0.0/49
+precision 0.0000
+recall 0.0000
+PC results: threshold0.75
+recovered0.0/49
+precision 0.0000
+recall 0.0000

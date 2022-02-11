@@ -9,6 +9,7 @@ import pandas as pd
 import numpy as np
 import os
 from astropy.io import fits
+from sklearn import preprocessing
 import matplotlib.pyplot as plt
 
 import time as tm
@@ -31,65 +32,57 @@ parser = argparse.ArgumentParser()
 parser.add_argument('sector', help='sector', type=str)
 args = parser.parse_args()
 
-#lightcuvre_dir = './sector6_fits_part/'
 #lightcuvre_dir = '/media/rluo/Elements/astro_data/TESS_TCE_lc_fits/sector'+args.sector+'/'
-lightcuvre_dir = '../fits_files/sector'+args.sector+'_tce_fits/'
+#lightcuvre_dir = '../data/sector'+args.sector+'_tce_fits/'  ## for sector 35-43
+lightcuvre_dir = '../fits_files/sector'+args.sector+'/' ## for sector 1-5
 
-csv_files = ['tess2018349182739-s0006-s0006_dvr-tcestats.csv',  
-             'tess2019008025936-s0007-s0007_dvr-tcestats.csv',  
-             'tess2019033200935-s0008-s0008_dvr-tcestats.csv',  
-             'tess2019059170935-s0009-s0009_dvr-tcestats.csv',  
-             'tess2019085221934-s0010-s0010_dvr-tcestats.csv', 
-             'tess2019113062933-s0011-s0011_dvr-tcestats.csv',
-             'tess2019141104532-s0012-s0012_dvr-tcestats.csv',
-             'tess2019170095531-s0013-s0013_dvr-tcestats.csv',
-             'tess2019199201929-s0014-s0014_dvr-tcestats.csv',
-             'tess2019227203528-s0015-s0015_dvr-tcestats.csv',
-             'tess2019255032927-s0016-s0016_dvr-tcestats.csv',
-             'tess2019281041526-s0017-s0017_dvr-tcestats.csv',
-             'tess2019307033525-s0018-s0018_dvr-tcestats.csv',
-             'tess2019332134924-s0019-s0019_dvr-tcestats.csv',
-             'tess2019358235523-s0020-s0020_dvr-tcestats.csv',             
-             'tess2020021221522-s0021-s0021_dvr-tcestats.csv',
-             'tess2020050191121-s0022-s0022_dvr-tcestats.csv',
-             'tess2020079142120-s0023-s0023_dvr-tcestats.csv',
-             'tess2020107065519-s0024-s0024_dvr-tcestats.csv',
-             'tess2020135030118-s0025-s0025_dvr-tcestats.csv',
-             'tess2020161181517-s0026-s0026_dvr-tcestats.csv',
-             'tess2020187183116-s0027-s0027_dvr-tcestats.csv',
-             'tess2020213081515-s0028-s0028_dvr-tcestats.csv',
-             'tess2020239173514-s0029-s0029_dvr-tcestats.csv',
-             'tess2020267090513-s0030-s0030_dvr-tcestats.csv',
-             'tess2020296001112-s0031-s0031_dvr-tcestats.csv',
-             'tess2020325171311-s0032-s0032_dvr-tcestats.csv',
-             'tess2020353052510-s0033-s0033_dvr-tcestats.csv',
-             'tess2021014055109-s0034-s0034_dvr-tcestats.csv',
-             'tess2021040113508-s0035-s0035_dvr-tcestats.csv',
-             'tess2021066093107-s0036-s0036_dvr-tcestats.csv',
-             'tess2021092173506-s0037-s0037_dvr-tcestats.csv',
-             'tess2021119082105-s0038-s0038_dvr-tcestats.csv',
-             'tess2021147062104-s0039-s0039_dvr-tcestats.csv']
+tce_folder = '../tess_lc_download_sh/tess_tce_csv/'
 
-sector6 = pd.read_csv('../tess_lc_download_sh/tess_tce_csv/'+csv_files[int(args.sector)-6], header=6)
+tce_info_csv_files = os.listdir(tce_folder)
+tce_info_csv_files = np.sort(tce_info_csv_files)
+
+
+sector_stat = pd.read_csv(tce_folder+tce_info_csv_files[int(args.sector)-1], header=6) ## tce_info_csv[0] coresponding to sector 1, etc. 
 #sector28 = pd.read_csv('tess_tce_csv/tess2020213081515-s0028-s0028_dvr-tcestats.csv', header=6)
-if int(args.sector)<=30:
-    ticid = sector6['ticid']
-    tceid = sector6['tceid']
-    periods = sector6['orbitalPeriodDays']
-    durations = sector6['transitDurationHours']
-    epochs = sector6['transitEpochBtjd']
-else:
-    ticid = sector6['ticid']
-    tceid = sector6['tceid']
-    periods = sector6['tce_period']
-    durations = sector6['tce_duration']
-    epochs = sector6['tce_time0bt']
-    
 
+'''
+if int(args.sector)<=12:
+    ticid = sector_stat['ticid']
+    tceid = sector_stat['tceid']
+    periods = sector_stat['orbitalPeriodDays']
+    durations = sector_stat['transitDurationHours']
+    epochs = sector_stat['transitEpochBtjd']
+    srad = sector_stat['starRadiusSolarRadii']
+    teff = sector_stat['starTeffKelvin']
+    logg = sector_stat['starLoggCgs']
+
+else:
+    ticid = sector_stat['ticid']
+    tceid = sector_stat['tceid']
+    periods = sector_stat['tce_period']
+    durations = sector_stat['tce_duration']
+    epochs = sector_stat['tce_time0bt']
+    srad = sector_stat['tce_sradius']
+    teff = sector_stat['tce_steff']
+    logg = sector_stat['tce_slogg']'''
+
+
+ticid = sector_stat['ticid']
+tceid = sector_stat['tceid']
+periods = sector_stat['tce_period']
+durations = sector_stat['tce_duration']
+epochs = sector_stat['tce_time0bt']
+srad = sector_stat['tce_sradius']
+teff = sector_stat['tce_steff']
+logg = sector_stat['tce_slogg']
+
+    
 #nigra = pd.read_csv('tess_tce_csv/nigraha_sec6.csv')
+
 
 fits_files = os.listdir(lightcuvre_dir)
 
+## extract tics from fits files
 fits_tics = []
 if int(args.sector)<=9:
     for f in fits_files:
@@ -100,21 +93,24 @@ else:
     for f in fits_files:
         fits_tics.append(int(f[24:40]))
 
-        
-
 start_time = tm.time()
 
 n_global, n_local = 201, 61
 n_half_global = int((n_global - 1)/2)
 n_half_local = int((n_local - 1)/2)
 
-tics_sector, global_sector, local_sector, secondary_sector = [], [], [], []
+sun_rad = 432376.0 # (miles)
+jupiter_rad = 43441.0 # (miles)
+
+
+tics_sector, tces_sector, global_sector, local_sector, secondary_sector, scalar_sector = [], [], [], [], [], []
 cnt = 0
-for t, p, du, ep in zip(ticid, periods, durations, epochs):
+for t, tce, p, du, ep, sr, tf, lg in zip(ticid, tceid, periods, durations, epochs, srad, teff, logg):
     if t in fits_tics:
         #print(p, du)
         #if t == 42991745:
         #hdulist = fits.open(lightcuvre_dir + 'sector{:}/{:016d}.fits'.format(int(s), int(t)))
+        #print(t,end=',')
         if int(args.sector)<=9:
             hdulist = fits.open(lightcuvre_dir + '{:016d}.fits'.format(int(t))) ## the TCEs fits file name
         else:
@@ -124,9 +120,23 @@ for t, p, du, ep in zip(ticid, periods, durations, epochs):
         time = hdulist[1].data['time']
         flux = hdulist[1].data['PDCSAP_FLUX'] ## alternatively, use ['KSPSAP_FLUX']
 
+        '''
+        if t == 55139557:
+            plt.plot(time, flux, 'b.')
+            plt.show()
+            plt.close()
+        
+            plt.plot(time, mom_1, 'b.')
+            plt.show()
+            plt.close()
+            plt.plot(time, mom_2, 'b.')
+            plt.show()
+            plt.close()
+            print(t,' data loaded.')'''
+
         ep = np.mod(ep - time[0], p) + time[0]
         ## flag the nan flux point quality as "bad ones"    
-        nan_flag = np.logical_and(np.isnan(flux), np.isnan(time))
+        nan_flag = np.logical_or(np.isnan(flux), np.isnan(time))
         #print(nan_flag) 
         quality[nan_flag] = 1024
 
@@ -146,7 +156,7 @@ for t, p, du, ep in zip(ticid, periods, durations, epochs):
             phase_median = np.nanmedian(flux[phase==ph])
             flux[phase==ph] /= phase_median
 
-
+        ################### GLOBAL VIEW #####################
         global_bins = create_bins(0, p, n_global, 1.0) ## global view bins
         large_global_bins = create_bins(0, p, n_global, 20.0) ## large global view is used to locate the secondary transit
         global_view = []
@@ -176,21 +186,24 @@ for t, p, du, ep in zip(ticid, periods, durations, epochs):
             global_view.append(np.nanquantile(flux_in_bin, [0.25, 0.5, 0.75]))
             large_global_view.append(np.nanmedian(flux_in_large_bin))
 
-
+        ################### LOCAL VIEW #####################
         local_bins = create_bins(0.5*p-du/16, 0.5*p+du/16, n_local, 1.0) ## local view bins, range 3 times duration
         local_view = []
         for b in local_bins:
             flux_in_bin = flux[np.logical_and(folded_time > b[0], folded_time < b[1])]
+
             if len(flux_in_bin) == 0:
                 expand = p/n_local
                 while True:
                     b[0] -= expand
                     b[1] += expand
                     flux_in_bin = flux[np.logical_and(folded_time > b[0], folded_time < b[1])]
+
                     if len(flux_in_bin)>0:
                         break
             local_view.append(np.nanquantile(flux_in_bin, [0.25, 0.5, 0.75]))
 
+        ################### SECONDARY VIEW #####################
         ## the largest one indicating the most possible transit
         secondary_transit_flag = np.array(large_global_view) - np.array(global_view)[:,1]
         ## mask out the positions already in the local view
@@ -201,48 +214,59 @@ for t, p, du, ep in zip(ticid, periods, durations, epochs):
 
         secondary_transit_time = np.mean(global_bins[position_secondary_transit])
 
-        primary_secondary_diff = abs(secondary_transit_time - 0.5*p) / p ## might be a useful feature
+        #primary_secondary_diff = abs(secondary_transit_time - 0.5*p) / p ## might be a useful feature
         #secondary_bins = create_bins(secondary_transit_time-du/16, secondary_transit_time+du/16, n_local, 1.0) ## local view bins
         secondary_bins = local_bins ##create_bins(0.5*p-du/16, 0.5*p+du/16, n_local, 1.0) ## local view bins        
         secondary_view = []
+        secondary_mom_1, secondary_mom_2 = [], []
         ## padd the flux time series so that the secondary
         ## shift the folded time to put the secondary transit in the middle
         folded_shift_time = (time - ep + secondary_transit_time) % p
+        folded_time_secondary_centered = (time - ep + secondary_transit_time) % p             
         #folded_time = np.concatenate((folded_time-p, folded_time, folded_time+p))
         #flux = np.concatenate((flux, flux, flux))
         #phase = np.concatenate((phase, phase, phase))
 
         for b in secondary_bins:
             ## NOTICE: folded_time flux have been padded
-            flux_in_bin = flux[np.logical_and(folded_shift_time > b[0], folded_shift_time < b[1])]
+            flux_in_bin = flux[np.logical_and(folded_time_secondary_centered > b[0], folded_time_secondary_centered < b[1])]
+
             if len(flux_in_bin) == 0:
                 expand = p/n_local
                 while True:
                     b[0] -= expand
                     b[1] += expand
-                    flux_in_bin = flux[np.logical_and(folded_shift_time > b[0], folded_shift_time < b[1])]
+                    flux_in_bin = flux[np.logical_and(folded_time_secondary_centered > b[0], folded_time_secondary_centered < b[1])]
+
                     if len(flux_in_bin)>0:
                         break
             secondary_view.append(np.nanquantile(flux_in_bin, [0.25, 0.5, 0.75]))
-
-        
 
         #secondary_view = np.concatenate((secondary_view[-n_half_local:], secondary_view, secondary_view[:n_half_local]))
 
 
         ## normalization step 2: set the minimun of the global view and local view to be zero
         global_view = np.array(global_view)
+
         local_view = np.array(local_view)
+
         secondary_view = np.array(secondary_view)
 
+        ## rescale global view
         median_min = np.nanmin(global_view[:,1])
         global_view -= median_min
         global_view /= (1-median_min+1e-7)
 
+        ## CALCULATE PLANET RADIUS
+        transit_depth = 1-median_min ## an auxiliary feature
+        planet_radius = sr * np.sqrt(transit_depth) * sun_rad / jupiter_rad
+
+        ## rescale local view
         median_min = np.nanmin(local_view[:,1])
         local_view -= median_min
         local_view /= (1-median_min+1e-7)
 
+        ## rescale secondary view
         secondary_flux_median = np.nanmedian(secondary_view[:,1])
         secondary_view /= secondary_flux_median
 
@@ -254,11 +278,42 @@ for t, p, du, ep in zip(ticid, periods, durations, epochs):
         local_view = np.nan_to_num(local_view, nan=1)
         secondary_view = np.nan_to_num(secondary_view, nan=1)
 
+
+        ## concatenate the flux local view and centroid local views
+        #global_view = np.concatenate((global_view, global_mom_1, global_mom_2), axis=1)
+        #local_view = np.concatenate((local_view, local_mom_1, local_mom_2), axis=1)
+        #secondary_view = np.concatenate((secondary_view, secondary_mom_1, secondary_mom_2), axis=1)
+
+        #rint(global_view.shape, local_view.shape)
+
+        '''
+        ## draw some figures to see if the data processing is correct.
+        figure, axis = plt.subplots(5, 1)
+        axis[0].set_title('TIC: '+str(t))
+        axis[0].plot(time, flux, 'k.')
+        axis[1].scatter(folded_time, flux, c=phase, cmap='rainbow')
+        axis[2].plot(global_view[:,0], 'c.')
+        axis[2].plot(global_view[:,1], 'm.')
+        axis[2].plot(global_view[:,2], 'g.')
+        axis[3].plot(local_view[:,0], 'c.')
+        axis[3].plot(local_view[:,1], 'm.')
+        axis[3].plot(local_view[:,2], 'g.')
+        axis[4].plot(secondary_view[:,0], 'c.')
+        axis[4].plot(secondary_view[:,1], 'm.')
+        axis[4].plot(secondary_view[:,2], 'g.')
+        #axis[4].plot(secondary_small_view, 'b.')
+        #axis[4].plot(secondary_large_view, 'r.')
+        #plt.plot(time, flux, 'c.')
+        #plt.plot(global_view, 'c.')
+        plt.show()
+        plt.close()'''
+
         tics_sector.append(t)
+        tces_sector.append(tce)
         global_sector.append(global_view)
         local_sector.append(local_view)
         secondary_sector.append(secondary_view)
-
+        scalar_sector.append([p, du, tf, sr, lg, planet_radius])
         cnt += 1
         if cnt%100==0:
             print(cnt, ' time: ', tm.time()-start_time)
@@ -268,18 +323,45 @@ for t, p, du, ep in zip(ticid, periods, durations, epochs):
 
 #pz = input('press enter to save npz files')
 ## convert the data into numpy format and swap axis to fit the pytorch requirement
-global_sector = np.array(global_sector)
-local_sector = np.array(local_sector)
-secondary_sector = np.array(secondary_sector)
+global_view = np.array(global_sector)
+local_view = np.array(local_sector)
+secondary_view = np.array(secondary_sector)
+scalar = np.array(scalar_sector)
 
-global_sector = np.swapaxes(global_sector, 1, 2)
-local_sector = np.swapaxes(local_sector, 1, 2)
-secondary_sector = np.swapaxes(secondary_sector, 1, 2)
+global_view = np.swapaxes(global_view, 1, 2)
+local_view = np.swapaxes(local_view, 1, 2)
+secondary_view = np.swapaxes(secondary_view, 1, 2)
 
-print(global_sector.shape, local_sector.shape)
+print(global_view.shape, local_view.shape, secondary_view.shape)
 
-np.savez('../model_input/data_q/sector'+str(args.sector)+'.npz', tic=np.array(tics_sector),
-         global_view=global_sector, local_view=local_sector, secondary_view=secondary_sector)
+np.savez('../model_input/data_q/sector'+str(args.sector)+'.npz', tic=np.array(tics_sector), tce=np.array(tces_sector), \
+         global_view=global_view, local_view=local_view, secondary_view=secondary_view, \
+         scalar=scalar)
+
 
 print("Sector "+args.sector+" Preprocessing Finished!")
 
+            
+'''
+figure, axis = plt.subplots(2, 1)
+axis[0].set_title('TIC: '+str(t))
+axis[0].plot(time, flux, 'm.')
+axis[1].scatter(folded_time, flux, c=phase, cmap='rainbow')
+plt.show()
+plt.close()
+
+print(t, p, du, ep)'''
+
+
+
+
+
+
+'''
+sector_stat = open('tess_tce_csv/tess2018349182739-s0006-s0006_dvr-tcestats.csv', 'r')
+data = sector_stat.readlines()
+sector_stat.close()
+
+for l in data:
+    print(l)
+    pz = input()'''
