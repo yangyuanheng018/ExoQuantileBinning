@@ -24,7 +24,6 @@ For example, run
 cd models/
 sh run_training_part1.sh
 sh run_training_part2.sh
-sh run_infer.sh
 ```
 to train ten models for the exoplanet *vetting* task with data augmentation method inversion (*i*).
 
