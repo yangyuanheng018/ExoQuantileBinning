@@ -10,11 +10,11 @@ The binning by quantile method is proposed to preprocess TESS light curves, wher
 
 [models](models/)
 - [models.py](models/models.py) neural network architecture
-- [train_model.py](models/train_model.py) model training and referring 
+- [train.py](models/train.py) model training and referring 
 - [infer_sectors.py](models/infer_sectors.py) inference and prediction of any sector
 
 ## Preparing the data for the neural network
-Run ```python data_preprocess/fold_bin_quantile.py``` to get 'train.npz', 'val.npz' and 'test.npz' in the 'model_input/data_q' folder.
+Run ```python data_preprocess/fold_bin_quantile.py``` to get 'training_data.npz' in the 'model_input/' folder.
 
 Run ```python data_preprocess/fold_bin_quantile_sectors.py``` to get 'sectorXX.npz' in the 'model_input/data_q' folder.
 
@@ -22,7 +22,9 @@ Run ```python data_preprocess/fold_bin_quantile_sectors.py``` to get 'sectorXX.n
 For example, run
 ```
 cd models/
-sh run_training.sh
+sh run_training_part1.sh
+sh run_training_part2.sh
+sh run_infer.sh
 ```
 to train ten models for the exoplanet *vetting* task with data augmentation method inversion (*i*).
 
